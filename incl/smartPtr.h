@@ -9,58 +9,69 @@ private:
 public:
 	Toy(std::string in_name) : name(in_name) {};
 	Toy() : Toy("Some Toy") {};
+	//Yavno ukazal
+	Toy(Toy* oth): name(oth->name){};
+
+	
 };
 
-
-
-class Smart_ptr_toy
+class Shared_ptr_toy
 {
 private:
+	Toy* toy = nullptr;
+	int count = 0;
+	const int* count_this_toy = &count;
 	
-	Toy* obj;
 public:
-
-	Smart_ptr_toy() : obj(new Toy()) {};
-	Smart_ptr_toy(std::string in_name) : obj(new Toy(in_name)) {}
-	Smart_ptr_toy(const Smart_ptr_toy& other) : obj(new Toy(*other.obj)) {};
-	Smart_ptr_toy& operator= (const Smart_ptr_toy& other)
+	Shared_ptr_toy() :toy(new Toy()) { count++; };
+	Shared_ptr_toy(std::string in_name) :toy(new Toy(in_name)) { count++; };
+	Shared_ptr_toy& operator= (const Shared_ptr_toy& oth)
 	{
-		if (this == &other) { return *this; }
-		if (obj != nullptr) delete obj;
-		obj = new Toy(*other.obj);
-		return *this;
+		if (this == &oth)
+			return *this;
+		if (toy != nullptr) delete toy;
+		toy = new Toy(oth.toy);
 	}
-	~Smart_ptr_toy() { delete obj;}
+
+	void reset()
+	{
+		delete this->toy;
+		count = 0;
+	}
+	Toy* get()
+	{
+		if (toy == nullptr) return nullptr;
+		return toy;
+	}
+
+	~Shared_ptr_toy()
+	{
+		count--;
+		delete this->toy;
+	}
 };
 
-// ??? if have on class constructors, why 
-//   this is need
-//     |
-//    \ /
-//     V
-
-Smart_ptr_toy* make_shared_toy(std::string in_name)
-{
-	return new Smart_ptr_toy{ in_name };
+Shared_ptr_toy* make_shared_ptr(std::string in_name) {
+	return new Shared_ptr_toy(in_name);
 }
 
-Smart_ptr_toy* make_shared_toy(Smart_ptr_toy& other)
-{
-	return new Smart_ptr_toy{ other };
+Shared_ptr_toy* make_shared_ptr(Shared_ptr_toy* toy) {
+	return new Shared_ptr_toy(*toy);
 }
 
-//There are have steal memory 
-
+class Box
+{
+	Shared_ptr_toy toys;
+public:
+	Box(Shared_ptr_toy* toy) : toys(*toy) {};
+	Box() : toys(nullptr) {};
+};
 
 void ex1()
 {
-	Smart_ptr_toy toys[10];
-	for (int i = 0; i < 10; i++)
-	{
-		toys[i] = *make_shared_toy("Balls #");
-	}
-	
-	std::cout << count << std::endl;
+	Box box[2];
+
+
 }
 
 void do_ex(void(*ex)() = ex1)
