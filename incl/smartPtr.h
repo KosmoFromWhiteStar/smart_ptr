@@ -81,9 +81,8 @@ public:
 void ex1()
 {
 	Shared_ptr_toy Ball = { "Ball" };
-	Box box[2] = { &Ball };
+	Box box[2] = { &Ball, &Ball };
 
-	box[1].toys = make_shared_ptr( &Ball );
 	std::cout << Ball.get_count() << std::endl;
 }
 
