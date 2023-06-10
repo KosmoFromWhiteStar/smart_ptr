@@ -1,12 +1,26 @@
 ﻿#pragma once
 #include <iostream>
+#include <vector>
 
 class Toy
 {
 private:
 	std::string name;
+	int count = 0;
 
 public:
+	int get_count()
+	{
+		return count;
+	}
+	void count_p()
+	{
+		count++;
+	}
+	void count_m()
+	{
+		count--;
+	}
 	Toy(std::string in_name) : name(in_name) {};
 	Toy() : Toy("Some Toy") {};
 	Toy(Toy* toy) : name(toy->name) {};
@@ -16,74 +30,76 @@ class Shared_ptr_toy
 {
 private:
 	Toy* toy = nullptr;
-	mutable int count = 0;
-	const int* count_this_toy = &count;
+
 public:
-	Shared_ptr_toy() :toy(new Toy()) {};
-	Shared_ptr_toy(std::string in_name) :toy(new Toy(in_name)) {};
-	Shared_ptr_toy& operator= (const Shared_ptr_toy& oth)
+	Shared_ptr_toy() : toy() {};
+	Shared_ptr_toy(std::string name)
 	{
-		if (this == &oth)
-			return *this;
-		if (toy != nullptr) delete toy;
-		toy = new Toy( oth.toy );
-		oth.count += 1;
+		if (toy == nullptr) toy = new Toy(name);
+		toy->count_p();
+	}
+	Shared_ptr_toy(const Shared_ptr_toy& oth)
+	{
+		if (oth.toy == nullptr)return;
+		this->toy = oth.toy;
+		toy->count_p();
+	}
+	Shared_ptr_toy operator= (Shared_ptr_toy* oth)
+	{
+		if (oth == nullptr) return *this;
+		if(toy != nullptr) 
+			toy->count_m();
+		toy = oth->toy;
+		toy->count_p();
+		return *this;
 	}
 
 	int get_count()
 	{
-		return count;
+		return (toy->get_count());
 	}
-
-	void reset()
-	{
-		delete this->toy;
-		count = 0;
-	}
-	Toy* get()
-	{
-		if (toy == nullptr) return nullptr;
-		return toy;
-	}
-
 	~Shared_ptr_toy()
 	{
-		count--;
-		delete this->toy;
+		toy->count_m();
+		if (toy->get_count() == 0) delete toy;
+		toy = nullptr;
 	}
 };
 
-Shared_ptr_toy make_shared_ptr(std::string in_name) {
-	Shared_ptr_toy temp (in_name);
-	return temp;
+Shared_ptr_toy* make_shared(std::string name)
+{
+	return new Shared_ptr_toy(name);
 }
 
-Shared_ptr_toy make_shared_ptr(Shared_ptr_toy* toy) {
-	Shared_ptr_toy temp(*toy);
-	return temp;
-}
-
-Shared_ptr_toy make_shared_ptr() {
-	Shared_ptr_toy temp;
-	return temp;
+Shared_ptr_toy* make_shared(Shared_ptr_toy& oth)
+{
+	return new Shared_ptr_toy(oth);
 }
 
 class Box
 {
-public:
 	Shared_ptr_toy toys;
+public:
+
 	Box(Shared_ptr_toy* toy) {
-		toys = *toy;
+		toys = toy;
 	};
+	void operator= (Shared_ptr_toy* toy)
+	{
+		toys = toy;
+	}
 	Box() {};
 };
 
 void ex1()
 {
-	Shared_ptr_toy Ball = { "Ball" };
-	Box box[2] = { &Ball, &Ball };
+	/// HERE
 
-	std::cout << Ball.get_count() << std::endl;
+
+
+
+
+	///HERE END
 }
 
 void do_ex(void(*ex)() = ex1)
