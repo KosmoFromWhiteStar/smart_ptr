@@ -6,21 +6,9 @@ class Toy
 {
 private:
 	std::string name;
-	int count = 0;
-
+	
 public:
-	int get_count()
-	{
-		return count;
-	}
-	void count_p()
-	{
-		count++;
-	}
-	void count_m()
-	{
-		count--;
-	}
+
 	Toy(std::string in_name) : name(in_name) {};
 	Toy() : Toy("Some Toy") {};
 	Toy(Toy* toy) : name(toy->name) {};
@@ -30,38 +18,40 @@ class Shared_ptr_toy
 {
 private:
 	Toy* toy = nullptr;
+	int* counter = new int(0);
 
 public:
+	int get_count()
+	{
+		return *counter;
+	}
+
 	Shared_ptr_toy() : toy() {};
 	Shared_ptr_toy(std::string name)
 	{
 		if (toy == nullptr) toy = new Toy(name);
-		toy->count_p();
 	}
 	Shared_ptr_toy(const Shared_ptr_toy& oth)
 	{
 		if (oth.toy == nullptr)return;
+		this->counter = oth.counter;
 		this->toy = oth.toy;
-		toy->count_p();
+		
 	}
-	Shared_ptr_toy operator= (Shared_ptr_toy* oth)
+	Shared_ptr_toy& operator= (const Shared_ptr_toy& oth)
 	{
-		if (oth == nullptr) return *this;
-		if(toy != nullptr) 
-			toy->count_m();
-		toy = oth->toy;
-		toy->count_p();
+		if (&oth == nullptr) return *this;
+		if (*(this->counter) > 0) (*(this->counter))--;
+		counter = oth.counter;
+		(*counter)++;
+		toy = oth.toy;
 		return *this;
 	}
 
-	int get_count()
-	{
-		return (toy->get_count());
-	}
 	~Shared_ptr_toy()
 	{
-		toy->count_m();
-		if (toy->get_count() == 0) delete toy;
+		(*counter)--;
+		if (*counter == 0) delete toy;
 		toy = nullptr;
 	}
 };
@@ -82,24 +72,46 @@ class Box
 public:
 
 	Box(Shared_ptr_toy* toy) {
-		toys = toy;
+		toys = *toy;
 	};
-	void operator= (Shared_ptr_toy* toy)
+	Box& operator= (Shared_ptr_toy& oth)
 	{
-		toys = toy;
+		toys = oth;
+		return *this;
 	}
+
 	Box() {};
+	~Box()
+	{
+		//delete toys;
+	}
 };
 
 void ex1()
 {
-	/// HERE
+	//Tests
+	Shared_ptr_toy Balls{ "Balls" };
+	Box b1, b2, b3;
+	b1 = make_shared(Balls);
+	b2 = make_shared(Balls);
+	b3 = make_shared(Balls);
+
+	std::cout << "3 Balls --------------------------\n";
+	std::cout << "Balls: " << Balls.get_count() << std::endl;
 
 
+	std::cout << "2 Balls, 1 Bone --------------------------\n";
+	Shared_ptr_toy Bone{ "Bone" };
+	b1 = make_shared(Bone);
+	std::cout << "Balls: " << Balls.get_count() << std::endl;
+	std::cout << "Bone: " << Bone.get_count() << std::endl;
 
+	std::cout << "3 Bone --------------------------\n";
+	b2 = make_shared(Bone);
+	b3 = make_shared(Bone);
+	std::cout << "Balls: " << Balls.get_count() << std::endl;
+	std::cout << "Bone: " << Bone.get_count() << std::endl;
 
-
-	///HERE END
 }
 
 void do_ex(void(*ex)() = ex1)
